@@ -1,3 +1,4 @@
+const path = require("path");
 const express = require("express");
 const body_parser = require("body-parser");
 const mongoose = require("mongoose");
@@ -12,6 +13,9 @@ const MONGODB_URL =
 const app = express();
 
 app.use(body_parser.json());
+//to be able to see our images file in our front end code.
+//and requist to /images serive it using this route.
+app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -24,6 +28,13 @@ app.use((req, res, next) => {
 });
 
 app.use("/feed", feedRouter);
+
+app.use((error, req, res, next) => {
+  console.log(error);
+  const status = error.statusCode || 500;
+  const message = error.message;
+  res.status(status).json({ message: message });
+});
 
 mongoose
   .connect(MONGODB_URL)

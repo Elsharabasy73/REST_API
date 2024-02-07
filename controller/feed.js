@@ -18,14 +18,23 @@ exports.createPost = (req, res, next) => {
   const { title, content } = req.body;
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
+    console.log(errors.array())
     const error = new Error("Validation failed, entered data is incorrect.");
     error.status = 400;
     throw error;
   }
+
+  //image fetch and validation
+  if (!req.file) {
+    const error = new Error("No jmage provided.");
+    error.statusCode = 422;
+    throw error;
+  }
+  const imageUrl = req.file.path;
   const post = new Post({
     title: title,
     content: content,
-    imageUrl: "/images/duck.jpeg",
+    imageUrl: imageUrl,
     creator: { name: "temp-Elsharabasy" },
   });
   post
@@ -43,7 +52,6 @@ exports.createPost = (req, res, next) => {
 };
 exports.getPost = (req, res, next) => {
   const postId = req.params.postId;
-  console.log(postId);
   Post.findById(postId)
     .then((post) => {
       if (!post) {

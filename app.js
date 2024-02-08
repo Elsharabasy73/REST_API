@@ -3,7 +3,9 @@ const express = require("express");
 const body_parser = require("body-parser");
 const mongoose = require("mongoose");
 const multer = require("multer");
+
 const feedRouter = require("./router/feed");
+const authRouter = require("./router/auth");
 
 const MONGODB_URL =
   // "mongodb+srv://abdomake73:xlsgzIvu2CYeOTrg@cluster0.vclsggt.mongodb.net/shop";
@@ -49,9 +51,8 @@ app.use((req, res, next) => {
   next();
 });
 
-
-
 app.use("/feed", feedRouter);
+app.use("/auth", authRouter);
 
 app.use((error, req, res, next) => {
   console.log(error);

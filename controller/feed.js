@@ -70,7 +70,7 @@ exports.getPost = (req, res, next) => {
 };
 
 exports.editPost = (req, res, next) => {
-  const {title, content } = req.body;
+  const { title, content } = req.body;
   // if no new file were add image path will be sent for ex /image/name.jpg
   const imageUrl = req.body.image;
   const postId = req.params.postId;
@@ -85,13 +85,11 @@ exports.editPost = (req, res, next) => {
     error.statusCode = 422;
     throw error;
   }
-    console.log('here', postId);
+  console.log("here", postId);
   Post.findById(postId)
     .then((post) => {
       if (!post) {
-        const error = new Error(
-          "postId not found"
-        );
+        const error = new Error("postId not found");
         error.statusCode = 422;
         throw error;
       }
@@ -115,7 +113,34 @@ exports.editPost = (req, res, next) => {
     });
 };
 
+exports.deletePost = (req, res, next) => {
+  const postId = req.params.postId;
+
+  Post.findById(postId)
+    .then((post) => {
+      if (!post) {
+        const error = new Error("Post not found");
+        error.statusCode = 422;
+        throw error;
+      }
+      removeImage(post.imageUrl);
+      return Post.findByIdAndDelete(postId);
+    })
+    .then((result) => {
+      res.status(200).json({ message: "Post deleted successfully." });
+    })
+    .catch((err) => {
+      if (!err.statusCode) err.statusCode = 500;
+      next(err);
+    });
+};
+
 const removeImage = (filePath) => {
-  filePath = path.join(__dirname + ".." + filePath);
-  fs.unlink(filePath, (err) => console.log(err));
+  filePath = path.join(__dirname, "..", filePath);
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+  });
 };

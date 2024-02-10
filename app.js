@@ -16,7 +16,10 @@ const fileStorage = multer.diskStorage({
     cb(null, "images");
   },
   filename: (req, file, cb) => {
-    cb(null, new Date().toISOString().replace(/:/g, "-") + "-" + file.originalname);
+    cb(
+      null,
+      new Date().toISOString().replace(/:/g, "-") + "-" + file.originalname
+    );
   },
 });
 const fileFilter = (req, file, cb) => {
@@ -58,7 +61,7 @@ app.use((error, req, res, next) => {
   console.log(error);
   const status = error.statusCode || 500;
   const message = error.message;
-  res.status(status).json({ message: message });
+  res.status(status).json({ message: message, data: error.data });
 });
 
 mongoose

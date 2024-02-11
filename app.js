@@ -58,7 +58,7 @@ app.use("/feed", feedRouter);
 app.use("/auth", authRouter);
 
 app.use((error, req, res, next) => {
-  console.log(error);
+  console.log('app.js',error);
   const status = error.statusCode || 500;
   const message = error.message;
   res.status(status).json({ message: message, data: error.data });

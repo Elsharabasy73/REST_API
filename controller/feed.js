@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 const Post = require("../models/post");
+const User = require("../models/user");
 
 exports.getPosts = (req, res, next) => {
   const currentPage = req.query.page || 1;
@@ -50,12 +51,23 @@ exports.createPost = (req, res, next) => {
     imageUrl: imageUrl,
     creator: { name: "temp-Elsharabasy" },
   });
+
+  let creator;
   post
     .save()
     .then((resultedPost) => {
+      return User.findById(req.userId);
+    })
+    .then((user) => {
+      user.posts.push(post);
+      creator = user;
+      return user.save();
+    })
+    .then((userResult) => {
       res.status(201).json({
         message: "Post Created successfully",
-        post: resultedPost,
+        post: post,
+        creator: { id: creator._id, name: creator.name },
       });
     })
     .catch((err) => {

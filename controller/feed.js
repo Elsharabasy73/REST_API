@@ -49,7 +49,7 @@ exports.createPost = (req, res, next) => {
     title: title,
     content: content,
     imageUrl: imageUrl,
-    creator: { name: "temp-Elsharabasy" },
+    creator: req.userId,
   });
 
   let creator;
@@ -150,7 +150,47 @@ exports.deletePost = (req, res, next) => {
       return Post.findByIdAndDelete(postId);
     })
     .then((result) => {
+      return User.findById(req.userId);
+    })
+    .then((user) => {
+      user.posts.pull(postId);
+      return user.save();
+    })
+    .then((result) => {
       res.status(200).json({ message: "Post deleted successfully." });
+    })
+    .catch((err) => {
+      if (!err.statusCode) err.statusCode = 500;
+      next(err);
+    });
+};
+
+exports.getStatus = (req, res, next) => {
+  User.findById(req.userId)
+    .then((user) => {
+      if (!user) throwError(500, "User not found in the DB.");
+      res
+        .status(200)
+        .json({ message: "Fetch status successfully", status: user.status });
+    })
+    .catch((err) => {
+      if (!err.statusCode) err.statusCode = 500;
+      next(err);
+    });
+};
+
+exports.updateStatus = (req, res, next) => {
+  const status = req.body.status;
+  User.findById(req.userId)
+    .then((user) => {
+      if (!user) throwError(500, "User not found in the DB.");
+      user.status = status;
+      return user.save();
+    })
+    .then((result) => {
+      res.status(200).json({
+        message: "User's status was updated successfully",
+      });
     })
     .catch((err) => {
       if (!err.statusCode) err.statusCode = 500;
@@ -167,3 +207,9 @@ const removeImage = (filePath) => {
     }
   });
 };
+
+function throwError(codeStatus, message) {
+  const error = new Error(message);
+  error.codeStatus = codeStatus;
+  throw error;
+}

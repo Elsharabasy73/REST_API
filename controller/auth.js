@@ -13,6 +13,7 @@ exports.creatUser = (req, res, next) => {
     throw error;
   }
   const { name, email, password } = req.body;
+  
   bcrypt
     .hash(password, 12)
     .then((hashedPass) => {

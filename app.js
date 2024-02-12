@@ -9,8 +9,8 @@ const authRouter = require("./router/auth");
 
 const MONGODB_URL =
   // "mongodb+srv://abdomake73:xlsgzIvu2CYeOTrg@cluster0.vclsggt.mongodb.net/shop";
-  // "mongodb+srv://abdomake73:xlsgzIvu2CYeOTrg@cluster0.vclsggt.mongodb.net/messages?retryWrites=true&w=majority";
-"mongodb://localhost:27017/message";
+  "mongodb+srv://abdomake73:xlsgzIvu2CYeOTrg@cluster0.vclsggt.mongodb.net/messages?retryWrites=true&w=majority";
+// "mongodb://localhost:27017/message";
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "images");

@@ -5,29 +5,25 @@ const path = require("path");
 const Post = require("../models/post");
 const User = require("../models/user");
 
-exports.getPosts = (req, res, next) => {
+exports.getPosts = async (req, res, next) => {
   const currentPage = req.query.page || 1;
   const perPage = 2;
-  let totalItems;
-  Post.countDocuments()
-    .then((numOfPosts) => {
-      totalItems = numOfPosts;
-      return Post.find()
-        .skip((currentPage - 1) * perPage)
-        .limit(perPage);
-    })
-    .then((posts) => {
-      res.status(200).json({
-        massage: "Fetched posts successfully.",
-        posts: posts,
-        totalItems: totalItems,
-      });
-    })
-    .catch((err) => {
-      if (!err.statusCode) err.statusCode = 500;
-      next(err);
+  try {
+    let totalItems = await Post.countDocuments();
+    const posts = await Post.find()
+      .skip((currentPage - 1) * perPage)
+      .limit(perPage);
+    res.status(200).json({
+      massage: "Fetched posts successfully.",
+      posts: posts,
+      totalItems: totalItems,
     });
+  } catch (err) {
+    if (!err.statusCode) err.statusCode = 500;
+    next(err);
+  }
 };
+
 exports.createPost = (req, res, next) => {
   const { title, content } = req.body;
   const errors = validationResult(req);
@@ -75,6 +71,7 @@ exports.createPost = (req, res, next) => {
       next(err);
     });
 };
+
 exports.getPost = (req, res, next) => {
   const postId = req.params.postId;
   Post.findById(postId)

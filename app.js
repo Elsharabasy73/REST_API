@@ -3,9 +3,11 @@ const express = require("express");
 const body_parser = require("body-parser");
 const mongoose = require("mongoose");
 const multer = require("multer");
+const cors = require("cors");
 
 const feedRouter = require("./router/feed");
 const authRouter = require("./router/auth");
+const { init } = require("./models/post");
 
 const MONGODB_URL =
   // "mongodb+srv://abdomake73:xlsgzIvu2CYeOTrg@cluster0.vclsggt.mongodb.net/shop";
@@ -39,13 +41,12 @@ app.use(
   multer({ storage: fileStorage, fileFilter: fileFilter }).single("image")
 );
 
-app.use(body_parser.json()); 
+app.use(body_parser.json());
 
 // app.use(body_parser.json());
 //to be able to see our images file in our front end code.
 //and requist to /images serive it using this route.
 app.use("/images", express.static(path.join(__dirname, "images")));
-
 
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
@@ -56,6 +57,7 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   next();
 });
+// app.use(cors());
 
 app.use("/feed", feedRouter);
 app.use("/auth", authRouter);
@@ -72,13 +74,17 @@ mongoose
   .then((res) => {
     console.log("db connected");
     const server = app.listen(8080);
-    console.log("listinning on port 8080");
+    console.log("listinning on port 8080,server:");
 
-    const io = require("socket.io")(server);
+    const io = require("./socket").init(8000, {
+      cors: {
+        origin: ["http://localhost:3000"],
+      },
+    });
     io.on("connection", (socket) => {
       console.log("client connected");
     });
   })
   .catch((err) => {
-    console.log(err);
+    console.log("listingerror" + err);
   });

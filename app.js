@@ -39,16 +39,19 @@ app.use(
   multer({ storage: fileStorage, fileFilter: fileFilter }).single("image")
 );
 
-app.use(body_parser.json());
+app.use(body_parser.json()); 
+
+// app.use(body_parser.json());
 //to be able to see our images file in our front end code.
 //and requist to /images serive it using this route.
 app.use("/images", express.static(path.join(__dirname, "images")));
 
+
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
   res.setHeader(
     "Access-Control-Allow-Methods",
-    "GET, POST, PUT, PATCH, DELETE"
+    "OPTIONS, GET, POST, PUT, PATCH, DELETE"
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   next();
@@ -58,7 +61,7 @@ app.use("/feed", feedRouter);
 app.use("/auth", authRouter);
 
 app.use((error, req, res, next) => {
-  console.log('app.js',error);
+  console.log("app.js", error);
   const status = error.statusCode || 500;
   const message = error.message;
   res.status(status).json({ message: message, data: error.data });
@@ -68,7 +71,14 @@ mongoose
   .connect(MONGODB_URL)
   .then((res) => {
     console.log("db connected");
-    app.listen(8080);
+    const server = app.listen(8080);
     console.log("listinning on port 8080");
+
+    const io = require("socket.io")(server);
+    io.on("connection", (socket) => {
+      console.log("client connected");
+    });
   })
-  .catch();
+  .catch((err) => {
+    console.log(err);
+  });

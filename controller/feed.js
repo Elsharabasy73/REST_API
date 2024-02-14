@@ -136,17 +136,22 @@ exports.deletePost = async (req, res, next) => {
   const postId = req.params.postId;
 
   try {
-    const post = await Post.findById(postId);
+    const post = await Post.findById(postId).populate('creator');
     if (!post) {
       const error = new Error("Post not found");
       error.statusCode = 422;
       throw error;
+    }
+    //only post owner can edit it.
+    if (post.creator._id.toString() !== req.userId) {
+      throwError(403, "Deletion operation is not authorized!");
     }
     removeImage(post.imageUrl);
     const result = await Post.findByIdAndDelete(postId);
     const user = await User.findById(req.userId);
     user.posts.pull(postId);
     const savedUser = await user.save();
+    io.getIO().emit('posts', {action:'delete' })
     res.status(200).json({ message: "Post deleted successfully." });
   } catch (err) {
     if (!err.statusCode) err.statusCode = 500;
@@ -195,6 +200,6 @@ const removeImage = (filePath) => {
 
 function throwError(codeStatus, message) {
   const error = new Error(message);
-  error.codeStatus = codeStatus;
+  error.statusCode = codeStatus;
   throw error;
 }

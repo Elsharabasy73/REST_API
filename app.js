@@ -71,9 +71,9 @@ app.use((error, req, res, next) => {
 
 mongoose
   .connect(MONGODB_URL)
-  .then((res) => {
+  .then(async(res) => {
     console.log("db connected");
-    const server = app.listen(8080);
+    const server = await app.listen(8080);
     console.log("listinning on port 8080,server:");
 
     const io = require("./socket").init(8000, {

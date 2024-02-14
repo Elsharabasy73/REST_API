@@ -104,11 +104,15 @@ exports.editPost = async (req, res, next) => {
     throw error;
   }
   try {
-    const post = await Post.findById(postId);
+    const post = await Post.findById(postId).populate("creator");
     if (!post) {
       const error = new Error("postId not found");
       error.statusCode = 422;
       throw error;
+    }
+    //only post owner can edit it.
+    if (post.creator._id.toString() !== req.userId) {
+      throwError(403, "Not authorized!");
     }
     if (imageUrl !== post.imageUrl) {
       removeImage(post.imageUrl);
@@ -118,6 +122,7 @@ exports.editPost = async (req, res, next) => {
     post.content = content;
     post.imageUrl = imageUrl;
     const postRes = await post.save();
+    io.getIO().emit("posts", { action: "update", post: post });
     res
       .status(200)
       .json({ message: "Post updated successfully", post: postRes });

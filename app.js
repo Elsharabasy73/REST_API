@@ -75,7 +75,6 @@ mongoose
     console.log("db connected");
     const server = await app.listen(8080);
     console.log("listinning on port 8080,server:");
-
     const io = require("./socket").init(8000, {
       cors: {
         origin: ["http://localhost:3000"],

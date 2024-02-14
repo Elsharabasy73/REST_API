@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
 
-exports.creatUser = (req, res, next) => {
+exports.creatUser = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     const error = new Error("Validation failed");
@@ -12,59 +12,51 @@ exports.creatUser = (req, res, next) => {
     error.data = errors.array();
     throw error;
   }
+
   const { name, email, password } = req.body;
-  bcrypt
-    .hash(password, 12)
-    .then((hashedPass) => {
-      const user = new User({
-        name: name,
-        email: email,
-        password: hashedPass,
-      });
-      return user.save();
-    })
-    .then((savedUser) => {
-      res.json({ message: "Signup Successfully!", userId: savedUser._id });
-    })
-    .catch((err) => {
-      if (!err.statusCode) err.statusCode = 500;
-      next(err);
+
+  try {
+    const hashedPass = await bcrypt.hash(password, 12);
+    const user = new User({
+      name: name,
+      email: email,
+      password: hashedPass,
     });
+    const savedUser = await user.save();
+    res.json({ message: "Signup Successfully!", userId: savedUser._id });
+  } catch (err) {
+    if (!err.statusCode) err.statusCode = 500;
+    next(err);
+  }
 };
 
-exports.login = (req, res, next) => {
+exports.login = async (req, res, next) => {
   const { email, password } = req.body;
-
-  let loaded_user;
-  User.findOne({ email: email })
-    .then((user) => {
-      if (!user) {
-        const error = new Error("User don't exist.");
-        error.statusCode = 401;
-        throw error;
-      }
-      loaded_user = user;
-      return bcrypt.compare(password, user.password);
-    })
-    .then((isEqual) => {
-      if (!isEqual) {
-        const error = new Error("Wrong password");
-        error.statusCode = 401;
-        throw error;
-      }
-      //generating JSON web token.
-      const token = jwt.sign(
-        {
-          email: loaded_user.email,
-          userId: loaded_user._id,
-        },
-        "secret",
-        { expiresIn: "1h" }
-      );
-      res.status(200).json({token:token, userId: loaded_user._id.toString()})
-    })
-    .catch((err) => {
-      if (!err.statusCode) err.statusCode = 500;
-      next(err);
-    });
+  try {
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      const error = new Error("User don't exist.");
+      error.statusCode = 401;
+      throw error;
+    }
+    const isEqual = await bcrypt.compare(password, user.password);
+    if (!isEqual) {
+      const error = new Error("Wrong password");
+      error.statusCode = 401;
+      throw error;
+    }
+    //generating JSON web token.
+    const token = jwt.sign(
+      {
+        email: user.email,
+        userId: user._id,
+      },
+      "secret",
+      { expiresIn: "1h" }
+    );
+    res.status(200).json({ token: token, userId: user._id.toString() });
+  } catch (err) {
+    if (!err.statusCode) err.statusCode = 500;
+    next(err);
+  }
 };

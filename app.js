@@ -4,7 +4,7 @@ const body_parser = require("body-parser");
 const mongoose = require("mongoose");
 const multer = require("multer");
 const cors = require("cors");
-const { graphqlHTTP } = require('express-graphql');
+const { graphqlHTTP } = require("express-graphql");
 // const { graphqlHttp } = require("express-graphql");
 const graphqlSchema = require("./graphql/schema");
 const graphqlResolvers = require("./graphql/resolvers");
@@ -60,11 +60,12 @@ app.use((req, res, next) => {
 // app.use(cors());
 
 app.use(
-  '/graphql',
+  "/graphql",
   graphqlHTTP({
     schema: graphqlSchema,
     rootValue: graphqlResolvers,
-  }),
+    graphiql: true, 
+  })
 );
 
 // app.use(

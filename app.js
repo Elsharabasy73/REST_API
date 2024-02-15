@@ -4,10 +4,10 @@ const body_parser = require("body-parser");
 const mongoose = require("mongoose");
 const multer = require("multer");
 const cors = require("cors");
-
-const feedRouter = require("./router/feed");
-const authRouter = require("./router/auth");
-const { init } = require("./models/post");
+const { graphqlHTTP } = require('express-graphql');
+// const { graphqlHttp } = require("express-graphql");
+const graphqlSchema = require("./graphql/schema");
+const graphqlResolvers = require("./graphql/resolvers");
 
 const MONGODB_URL =
   // "mongodb+srv://abdomake73:xlsgzIvu2CYeOTrg@cluster0.vclsggt.mongodb.net/shop";
@@ -59,8 +59,21 @@ app.use((req, res, next) => {
 });
 // app.use(cors());
 
-app.use("/feed", feedRouter);
-app.use("/auth", authRouter);
+app.use(
+  '/graphql',
+  graphqlHTTP({
+    schema: graphqlSchema,
+    rootValue: graphqlResolvers,
+  }),
+);
+
+// app.use(
+//   "/graphql",
+//   graphqlHttp({
+//     schema: graphqlSchema,
+//     rootValue: graphqlResolvers,
+//   })
+// );
 
 app.use((error, req, res, next) => {
   console.log("app.js", error);
@@ -71,18 +84,10 @@ app.use((error, req, res, next) => {
 
 mongoose
   .connect(MONGODB_URL)
-  .then(async(res) => {
+  .then(async (res) => {
     console.log("db connected");
     const server = await app.listen(8080);
-    console.log("listinning on port 8080,server:");
-    const io = require("./socket").init(8000, {
-      cors: {
-        origin: ["http://localhost:3000"],
-      },
-    });
-    io.on("connection", (socket) => {
-      console.log("client connected");
-    });
+    console.log("listinning on port 8080,server:8080");
   })
   .catch((err) => {
     console.log("listingerror" + err);

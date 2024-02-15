@@ -92,7 +92,7 @@ exports.getPost = async (req, res, next) => {
 exports.editPost = async (req, res, next) => {
   const { title, content } = req.body;
   // if no new file were add image path will be sent for ex /image/name.jpg
-  const imageUrl = req.body.image;
+  let imageUrl = req.body.image;
   const postId = req.params.postId;
   //new image were added
   if (req.file) {

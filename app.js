@@ -4,15 +4,16 @@ const body_parser = require("body-parser");
 const mongoose = require("mongoose");
 const multer = require("multer");
 const cors = require("cors");
-const { graphqlHTTP } = require("express-graphql");
-// const { graphqlHttp } = require("express-graphql");
+const { createHandler } = require("graphql-http/lib/use/express");
+const playground = require("graphql-playground-middleware-express").default;
+
 const graphqlSchema = require("./graphql/schema");
 const graphqlResolvers = require("./graphql/resolvers");
 
 const MONGODB_URL =
   // "mongodb+srv://abdomake73:xlsgzIvu2CYeOTrg@cluster0.vclsggt.mongodb.net/shop";
-  "mongodb+srv://abdomake73:xlsgzIvu2CYeOTrg@cluster0.vclsggt.mongodb.net/messages?retryWrites=true&w=majority";
-// "mongodb://localhost:27017/message";
+  // "mongodb+srv://abdomake73:xlsgzIvu2CYeOTrg@cluster0.vclsggt.mongodb.net/messages?retryWrites=true&w=majority";
+  "mongodb://localhost:27017/message";
 const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "images");
@@ -49,7 +50,7 @@ app.use(body_parser.json());
 app.use("/images", express.static(path.join(__dirname, "images")));
 
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
     "Access-Control-Allow-Methods",
     "OPTIONS, GET, POST, PUT, PATCH, DELETE"
@@ -59,22 +60,25 @@ app.use((req, res, next) => {
 });
 // app.use(cors());
 
+app.get("/playground", playground({ endpoint: "/graphql" }));
+
 app.use(
   "/graphql",
-  graphqlHTTP({
+  createHandler({
     schema: graphqlSchema,
     rootValue: graphqlResolvers,
-    graphiql: true, 
+    graphiql: true,
+    formatError(err) {
+      if (!err.originalError) {
+        return err;
+      }
+      const data = err.originalError.data;
+      const message = err.message || "An error occured.";
+      const code = err.originalError.code || 500;
+      return { message: message, status: code, data: data };
+    },
   })
 );
-
-// app.use(
-//   "/graphql",
-//   graphqlHttp({
-//     schema: graphqlSchema,
-//     rootValue: graphqlResolvers,
-//   })
-// );
 
 app.use((error, req, res, next) => {
   console.log("app.js", error);

@@ -25,9 +25,13 @@ module.exports = buildSchema(`
         name: String!
         password: String!
     }
+    type QueryData{
+        text:String!
+        views:Int!
+    }
 
     type RootQuery {
-        hello: String
+        hello: QueryData!
     }
 
     type RootMutation {

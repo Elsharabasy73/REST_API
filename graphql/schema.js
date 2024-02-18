@@ -24,6 +24,7 @@ module.exports = buildSchema(`
         email: String!
         name: String!
         password: String!
+        status:String
     }
     type QueryData{
         text:String!

@@ -17,6 +17,7 @@ const schema = yup.object().shape({
 
 module.exports = {
   createUser: async function ({ userInput }, req) {
+    console.log(userInput);
     //Data Validation
     const errorsList = [];
     try {
@@ -41,7 +42,7 @@ module.exports = {
     if (existingUser) {
       throw new Error("User already exists");
     }
-    
+
     const hashedPw = await bcrypt.hash(userInput.password, 12);
     const user = new User({
       email: userInput.email,
@@ -55,42 +56,3 @@ module.exports = {
     return { text: "Hello, World", views: 123 };
   },
 };
-
-// module.exports = {
-//   createUser: async function ({ userInput }, req) {
-//     //   const email = args.userInput.email;
-//     const errors = [];
-//     const existingUser = await User.findOne({ email: userInput.email });
-//     if (existingUser) {
-//       const error = new Error("User already exist");
-//       throw error;
-//     }
-//     if (!validator.isEmail(userInput.email)) {
-//       errors.push({ message: "Envalid email!" });
-//     }
-//     if (
-//       validator.isEmpty(userInput.password) ||
-//       !validator.isLength(userInput.password, { min: 5 })
-//     ) {
-//       errors.push({ message: "Password too short!" });
-//     }
-//     console.log(errors);
-//     if (errors.length > 0) {
-//       const error = new Error("Invalid input1.");
-//       error.data = errors;
-//       error.code = 422;
-//       throw error;
-//     }
-//     const hashedPw = await bcrypt.hash(userInput.password, 12);
-//     const user = new User({
-//       email: userInput.email,
-//       name: userInput.name,
-//       password: hashedPw,
-//     });
-//     const createdUser = await user.save();
-//     return { ...createdUser._doc, _id: createdUser._id.toString() };
-//   },
-//   hello() {
-//     return { text: "Hello, World", views: 123 };
-//   },
-// };

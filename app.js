@@ -56,6 +56,9 @@ app.use((req, res, next) => {
     "OPTIONS, GET, POST, PUT, PATCH, DELETE"
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
   next();
 });
 // app.use(cors());
@@ -79,6 +82,9 @@ app.use(
     },
   })
 );
+app.use("/test", (req, res, next) => {
+  res.status(200).json({ message: "test work!" });
+});
 
 app.use((error, req, res, next) => {
   console.log("app.js", error);

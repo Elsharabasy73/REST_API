@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
-const validator = require("validator");
 const yup = require("yup");
+const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
 
@@ -52,7 +52,37 @@ module.exports = {
     const createdUser = await user.save();
     return { ...createdUser._doc, _id: createdUser._id.toString() };
   },
+
   hello() {
     return { text: "Hello, World", views: 123 };
+  },
+
+  async login({ email, password }, req) {
+    const errorsList = [];
+    //Data validation
+    try {
+      await schema.validate({ email, password }, { abortEarly: false });
+    } catch (errors) {
+      errors.inner.forEach((error) => {
+        errorsList.push({ path: error.path, message: error.message });
+      });
+    }
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      const error = new Error("User dosen't exist!");
+      error.code = 401;
+      throw error;
+    }
+    const isEqual = await bcrypt.compare(password, user.password);
+    if (!isEqual) {
+      const error = new Error("User and Password don't match");
+      error.code = 401;
+      throw error;
+    }
+    //Token generation.
+    const token = jwt.sign({ email, password }, "secretKey", {
+      expiresIn: "1h",
+    });
+    return { token, userId: user._id.toString() };
   },
 };

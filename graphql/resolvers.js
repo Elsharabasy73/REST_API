@@ -144,4 +144,11 @@ module.exports = {
       updatedAt: createdPost.updatedAt.toISOString(),
     };
   },
+  getStatus: async function (parent, { req }) {
+    console.log("congartulation");
+    const user = req.raw.user;
+
+    // return { message: "Fetch status successfully", status: user.status };
+    return user.status;
+  },
 };

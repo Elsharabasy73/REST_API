@@ -6,6 +6,8 @@ const User = require("../models/user");
 const Post = require("../models/post");
 const user = require("../models/user");
 
+const ITEMS_PER_PAGE = 2;
+
 const usrSchema = yup.object().shape({
   email: yup
     .string()
@@ -150,15 +152,18 @@ module.exports = {
     // return { message: "Fetch status successfully", status: user.status };
     return user.status;
   },
-  posts: async function (parent, { req }) {
-    console.log('++++++++++++++++++++++++');
+  posts: async function ({ page }, { req }) {
     AuthenticationHandler(req);
+    //validating data
+    if (!page) page = 1;
     const user = req.raw.user;
     const userId = req.raw.userId;
     //featching posts
     const posts = await Post.find({ creator: userId })
       .sort({ createdAt: -1 })
-      .populate("creator");
+      .populate("creator")
+      .skip((page - 1) * ITEMS_PER_PAGE)
+      .limit(ITEMS_PER_PAGE);
     const totalPosts = user.posts.length;
     return {
       posts: posts.map((p) => {

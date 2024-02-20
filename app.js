@@ -10,6 +10,7 @@ const playground = require("graphql-playground-middleware-express").default;
 const graphqlSchema = require("./graphql/schema");
 const graphqlResolvers = require("./graphql/resolvers");
 const auth = require("./middleware/auth");
+const removeImage = require("./utility/remove-images");
 
 const MONGODB_URL =
   // "mongodb+srv://abdomake73:xlsgzIvu2CYeOTrg@cluster0.vclsggt.mongodb.net/shop";
@@ -66,9 +67,27 @@ app.use((req, res, next) => {
 
 app.get("/playground", playground({ endpoint: "/graphql" }));
 
+app.use(auth);
+
+app.put("/post-image", (req, res, next) => {
+  console.log("+++++++++++++++++++++++++++++");
+  if (!req.isAuth) {
+    throw new Error("Not authenticated to upload an image.");
+  }
+  if (!req.file) {
+    res.status(200).json({ message: "No file provided." });
+  }
+  console.log('req.body.oldPath:',req.body.oldPath);
+  if (req.body.oldPath) {
+    removeImage(req.body.oldPath);
+  }
+  return res
+    .status(201)
+    .json({ message: "File stored", filePath: req.file.path });
+});
+
 app.use(
   "/graphql",
-  auth,
   createHandler({
     schema: graphqlSchema,
     rootValue: graphqlResolvers,

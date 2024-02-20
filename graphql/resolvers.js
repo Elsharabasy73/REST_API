@@ -106,8 +106,8 @@ module.exports = {
     return { token, userId: user._id.toString() };
   },
   createPost: async function ({ postInput }, { req }) {
+    AuthenticationHandler(req);
     const user = req.raw.user;
-    console.log("Auth?:", req.raw.isAuth);
     //Creating post
     console.log(postInput);
     const post = new Post({
@@ -145,10 +145,41 @@ module.exports = {
     };
   },
   getStatus: async function (parent, { req }) {
-    console.log("congartulation");
+    AuthenticationHandler(req);
     const user = req.raw.user;
-
     // return { message: "Fetch status successfully", status: user.status };
     return user.status;
   },
+  posts: async function (parent, { req }) {
+    console.log('++++++++++++++++++++++++');
+    AuthenticationHandler(req);
+    const user = req.raw.user;
+    const userId = req.raw.userId;
+    //featching posts
+    const posts = await Post.find({ creator: userId })
+      .sort({ createdAt: -1 })
+      .populate("creator");
+    const totalPosts = user.posts.length;
+    return {
+      posts: posts.map((p) => {
+        return {
+          ...p._doc,
+          _id: p._id.toString(),
+          createdAt: p.createdAt.toISOString(),
+          updatedAt: p.updatedAt.toISOString(),
+        };
+      }),
+      totalPosts: totalPosts,
+    };
+  },
+};
+
+const AuthenticationHandler = (req) => {
+  //checking user Authenticatication.
+  const isAuth = req.raw.isAuth;
+  if (!isAuth) {
+    const error = new Error("Not authenticatedd!");
+    error.code = 401;
+    throw error;
+  }
 };

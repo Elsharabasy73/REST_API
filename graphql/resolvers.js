@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
 const Post = require("../models/post");
+const user = require("../models/user");
 
 const usrSchema = yup.object().shape({
   email: yup
@@ -17,9 +18,12 @@ const usrSchema = yup.object().shape({
 });
 
 const postSchema = yup.object().shape({
-  title: yup.string().min(5, "Title must be at least 5 characters.").required('titl is required.'),
+  title: yup
+    .string()
+    .min(5, "Title must be at least 5 characters.")
+    .required("titl is required."),
   content: yup
-    .string('content is required.')
+    .string("content is required.")
     .min(5, "Content must be at least 5 characters.")
     .required(),
   imageUrl: yup.string().url("Not a valid Url."),
@@ -96,18 +100,20 @@ module.exports = {
       throw error;
     }
     //Token generation.
-    const token = jwt.sign({ email, password }, "secretKey", {
+    const token = jwt.sign({ email, userId: user._id }, "secret", {
       expiresIn: "1h",
     });
     return { token, userId: user._id.toString() };
   },
-  createPost: async function ({ postInput }, req) {
+  createPost: async function ({ postInput }, { req }) {
+    console.log("Auth?:", req.raw.isAuth);
     //Creating post
     console.log(postInput);
     const post = new Post({
       title: postInput.title,
       content: postInput.content,
       imageUrl: postInput.imageUrl,
+      creator: req.user,
     });
     //validation
     const errorsList = [];
@@ -124,6 +130,9 @@ module.exports = {
       error.code = 422;
       throw error;
     }
+
+    //Pushing the post to the users list
+    await req.user.posts.push(post);
     //Saving post
     const createdPost = await post.save();
     return {

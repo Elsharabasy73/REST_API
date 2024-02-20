@@ -4,9 +4,8 @@ module.exports = async (req, res, next) => {
   //get token from header
   const tokenHeader = req.get("Authorization");
   if (!tokenHeader) {
-    const error = new Error("No access token fetched from frond-end's header");
-    error.codeStatus = 401;
-    throw error;
+    req.isAuth = false;
+    return next();
   }
   const token = tokenHeader.split(" ")[1];
   //decode the token
@@ -14,28 +13,33 @@ module.exports = async (req, res, next) => {
   try {
     decodedToken = jwt.verify(token, "secret");
   } catch (err) {
-    err.codeStatus = 500;
-    throw err;
+    req.isAuth = false;
+    return next();
   }
   if (!decodedToken) {
-    throwError(401, "Token can't be decoded.");
+    req.isAuth = false;
+    return next();
   }
   //validate the userId extracted fro the token
   const userId = decodedToken.userId;
   const email = decodedToken.email;
+  let user;
   try {
-    const user = await User.find({ _id: req.userId, email: req.email });
-    if (!user)
-      throwError(401, "The authintication token you provide is not valid!");
-    req.userId = userId;
-    req.email = email;
-    next();
-  } catch (err) {
-    if (!err.codeStatus) {
-      err.codeStatus = 500;
+    user = await User.findOne({ _id: userId, email: email });
+    if (!user) {
+      req.isAuth = false;
+      return next();
     }
-    next(err);
+  } catch (err) {
+    req.isAuth = false;
+    return next();
   }
+  req.userId = userId;
+  req.user = user;
+  req.isAuth = true;
+  console.log("1req.user:", req.user);
+
+  next();
 };
 function throwError(codeStatus, message) {
   const error = new Error(message);

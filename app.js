@@ -9,6 +9,7 @@ const playground = require("graphql-playground-middleware-express").default;
 
 const graphqlSchema = require("./graphql/schema");
 const graphqlResolvers = require("./graphql/resolvers");
+const auth = require("./middleware/auth");
 
 const MONGODB_URL =
   // "mongodb+srv://abdomake73:xlsgzIvu2CYeOTrg@cluster0.vclsggt.mongodb.net/shop";
@@ -67,10 +68,12 @@ app.get("/playground", playground({ endpoint: "/graphql" }));
 
 app.use(
   "/graphql",
+  auth,
   createHandler({
     schema: graphqlSchema,
     rootValue: graphqlResolvers,
     graphiql: true,
+    context: (req) => ({ req }),
     formatError(err) {
       if (!err.originalError) {
         return err;
@@ -78,6 +81,7 @@ app.use(
       const data = err.originalError.data;
       const message = err.message || "An error occured.";
       const code = err.originalError.code || 500;
+      console.log(err);
       return { message: message, status: code, data: data };
     },
   })

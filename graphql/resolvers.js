@@ -106,6 +106,7 @@ module.exports = {
     return { token, userId: user._id.toString() };
   },
   createPost: async function ({ postInput }, { req }) {
+    const user = req.raw.user;
     console.log("Auth?:", req.raw.isAuth);
     //Creating post
     console.log(postInput);
@@ -113,7 +114,7 @@ module.exports = {
       title: postInput.title,
       content: postInput.content,
       imageUrl: postInput.imageUrl,
-      creator: req.user,
+      creator: user,
     });
     //validation
     const errorsList = [];
@@ -132,7 +133,7 @@ module.exports = {
     }
 
     //Pushing the post to the users list
-    await req.user.posts.push(post);
+    await user.posts.push(post);
     //Saving post
     const createdPost = await post.save();
     return {

@@ -37,8 +37,6 @@ module.exports = async (req, res, next) => {
   req.userId = userId;
   req.user = user;
   req.isAuth = true;
-  console.log("1req.user:", req.user);
-
   next();
 };
 function throwError(codeStatus, message) {

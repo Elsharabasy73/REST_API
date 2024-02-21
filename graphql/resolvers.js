@@ -187,6 +187,52 @@ module.exports = {
       updatedAt: post.updatedAt.toISOString(),
     };
   },
+  updatePost: async function ({ id, postData }, { req }) {
+    //authenticaoin
+    AuthenticationHandler(req);
+    const user = req.raw.user;
+    const userId = req.raw.userId;
+    const post = await Post.findById(id).populate("creator");
+    //validation
+    const errorsList = [];
+    try {
+      await postSchema.validate({ ...post });
+    } catch (errors) {
+      errors.inner.forEach((error) => {
+        errorsList.push({ path: error.path, message: error.message });
+      });
+    }
+    if (errorsList.length > 0) {
+      const error = new Error("Invalid input1.");
+      error.data = errorsList;
+      error.code = 422;
+      throw error;
+    }
+    //Making sure user edit his post
+    if (!post) {
+      const error = new Error("No past found!");
+      error.code = 404;
+      throw error;
+    }
+    if (post.creator._id.toString() !== userId.toString()) {
+      const error = new Error(
+        "Not authorized, This is not your post to edit!!!"
+      );
+      error.code = 403;
+      throw error;
+    }
+    //updating data
+    post.title = postData.title;
+    post.content = postData.content;
+    if (postData.imageUrl !== "undefined") post.imageUrl = postData.imageUrl;
+    const createdPost = await post.save();
+    return {
+      ...createdPost._doc,
+      _id: createdPost._id.toString(),
+      createdAt: createdPost.createdAt.toISOString(),
+      updatedAt: createdPost.updatedAt.toISOString(),
+    };
+  },
 };
 
 const AuthenticationHandler = (req) => {

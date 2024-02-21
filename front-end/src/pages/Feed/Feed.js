@@ -195,10 +195,14 @@ class Feed extends Component {
       .then((res) => res.json())
       .then((fileResData) => {
         const imageUrl = fileResData.filePath;
-        const graphqlQuery = {
+        let graphqlQuery = {
           query: `
         mutation{
-          createPost(postInput:{title:"${postData.title}", content:"${postData.content}", imageUrl:"${imageUrl}"}){
+          createPost(
+          postInput:{title:"${postData.title}", 
+          content:"${postData.content}", 
+          imageUrl:"${imageUrl}"})
+          {
             _id
             title
             content
@@ -208,6 +212,25 @@ class Feed extends Component {
           }
         }`,
         };
+        if (this.state.editPost) {
+          graphqlQuery = {
+            query: `
+          mutation{
+            updatePost(id:"${this.state.editPost._id}",
+            postData:{title:"${postData.title}", 
+            content:"${postData.content}", 
+            imageUrl:"${imageUrl}"})
+            {
+              _id
+              title
+              content
+              imageUrl
+              creator{_id name}
+              createdAt
+            }
+          }`,
+          };
+        }
         return fetch(url, {
           method: method,
           body: JSON.stringify(graphqlQuery),
@@ -221,12 +244,13 @@ class Feed extends Component {
         return res.json();
       })
       .then((resData) => {
-        if (resData.errors) {
-          console.log(resData);
-          throw new Error("post creation failed.");
-        }
         console.log(resData);
-        const product = resData.data.createPost;
+        if (resData.errors) {
+          throw new Error('User login failed!');
+        }
+        let resDataField = "createPost";
+        if (this.state.editPost) resDataField = "updatePost";
+        const product = resData.data[resDataField];
         const post = {
           _id: product._id,
           title: product.title,

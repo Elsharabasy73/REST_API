@@ -150,6 +150,14 @@ module.exports = {
     // return { message: "Fetch status successfully", status: user.status };
     return user.status;
   },
+  updateStatus: async function ({ status }, { req }) {
+    //authenticaoin
+    AuthenticationHandler(req);
+    const user = req.raw.user;
+    user.status = status;
+    const savedUser = await user.save();
+    return { ...savedUser._doc, _id: savedUser._id.toString() };
+  },
   posts: async function ({ page }, { req }) {
     AuthenticationHandler(req);
     //validating data

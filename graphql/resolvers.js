@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
 const Post = require("../models/post");
-const user = require("../models/user");
+const removeImage = require("../utility/remove-images");
 
 const ITEMS_PER_PAGE = 2;
 
@@ -157,12 +157,12 @@ module.exports = {
     const user = req.raw.user;
     const userId = req.raw.userId;
     //featching posts
-    const posts = await Post.find({ creator: userId })
+    const posts = await Post.find()
       .sort({ createdAt: -1 })
       .populate("creator")
       .skip((page - 1) * ITEMS_PER_PAGE)
       .limit(ITEMS_PER_PAGE);
-    const totalPosts = user.posts.length;
+    const totalPosts = await Post.countDocuments();
     return {
       posts: posts.map((p) => {
         return {
@@ -180,6 +180,11 @@ module.exports = {
     AuthenticationHandler(req);
     //fetching post data
     const post = await Post.findById(id).populate("creator");
+    if (!post) {
+      const error = new Error("No post found!");
+      error.code = 404;
+      throw error;
+    }
     return {
       ...post._doc,
       _id: post._id.toString(),
@@ -232,6 +237,37 @@ module.exports = {
       createdAt: createdPost.createdAt.toISOString(),
       updatedAt: createdPost.updatedAt.toISOString(),
     };
+  },
+  deletePost: async function ({ id }, { req }) {
+    //authenticaoin
+    AuthenticationHandler(req);
+    const user = req.raw.user;
+    const userId = req.raw.userId;
+    const post = await Post.findById(id);
+    if (!post) {
+      const error = new Error("No post found!");
+      error.code = 404;
+      throw error;
+    }
+    if (userId.toString() !== post.creator.toString()) {
+      const error = new Error(
+        "Not authorized, This is not your post to delete!!!"
+      );
+      error.code = 403;
+      throw error;
+    }
+    const deletedPost = await Post.findByIdAndDelete(id);
+    if (deletedPost) {
+      removeImage(deletedPost.imageUrl);
+      const user = await User.findById(userId);
+      user.posts.pull(id);
+      await user.save();
+      return true;
+    } else {
+      const error = new Error("Deletion failed some thing whent wrong.");
+      error.code = 500;
+      throw error;
+    }
   },
 };
 

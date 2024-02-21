@@ -246,7 +246,7 @@ class Feed extends Component {
       .then((resData) => {
         console.log(resData);
         if (resData.errors) {
-          throw new Error('User login failed!');
+          throw new Error("User login failed!");
         }
         let resDataField = "createPost";
         if (this.state.editPost) resDataField = "updatePost";
@@ -295,21 +295,28 @@ class Feed extends Component {
 
   deletePostHandler = (postId) => {
     this.setState({ postsLoading: true });
-    fetch("http://localhost:8080/feed/post/" + postId, {
-      method: "DELETE",
+    const graphqlQuery = {
+      query: `mutation{
+      deletePost(id:"${postId}")
+    }`,
+    };
+    fetch("http://localhost:8080/graphql", {
+      method: "POST",
       headers: {
         Authorization: "Bearer " + this.props.token,
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify(graphqlQuery),
     })
       .then((res) => {
         return res.json();
       })
       .then((resData) => {
+        console.log(resData);
         if (resData.errors) {
           console.log(resData);
-          throw new Error("post creation failed.");
+          throw new Error("post deletion failed.");
         }
-        console.log(resData);
         this.loadPosts();
       })
       .catch((err) => {

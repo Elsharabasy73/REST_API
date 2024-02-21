@@ -49,7 +49,6 @@ exports.createPost = async (req, res, next) => {
     content: content,
     imageUrl: imageUrl,
     creator: req.userId,
-    creator: req.userId,
   });
 
   try {

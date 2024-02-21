@@ -69,8 +69,8 @@ app.get("/playground", playground({ endpoint: "/graphql" }));
 
 app.use(auth);
 
+//storing uploaded image
 app.put("/post-image", (req, res, next) => {
-  console.log("+++++++++++++++++++++++++++++");
   if (!req.isAuth) {
     throw new Error("Not authenticated to upload an image.");
   }
@@ -81,6 +81,7 @@ app.put("/post-image", (req, res, next) => {
   if (req.body.oldPath) {
     removeImage(req.body.oldPath);
   }
+  console.log('req.file.path:',req.file.path);
   return res
     .status(201)
     .json({ message: "File stored", filePath: req.file.path });

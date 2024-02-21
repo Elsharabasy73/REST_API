@@ -75,20 +75,23 @@ class Feed extends Component {
       this.setState({ postPage: page });
     }
     const graphqlQuery = {
-      query: `{
-      posts(page: ${page}){
-        posts{
-          _id
-          title
-          content
-          creator{
-            name
+      query: `
+        {
+          posts(page: ${page}) {
+            posts {
+              _id
+              title
+              content
+              imageUrl
+              creator {
+                name
+              }
+              createdAt
+            }
+            totalPosts
           }
-          createdAt
         }
-        totalPosts
-      }
-    }`,
+      `,
     };
     // fetch("http://localhost:8080/feed/posts?page=" + page, {
     fetch("http://localhost:8080/graphql", {
@@ -189,7 +192,7 @@ class Feed extends Component {
       },
       body: formData,
     })
-      .then((res) => res.json)
+      .then((res) => res.json())
       .then((fileResData) => {
         const imageUrl = fileResData.filePath;
         const graphqlQuery = {
@@ -275,18 +278,15 @@ class Feed extends Component {
       },
     })
       .then((res) => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error("Deleting a post failed!");
-        }
         return res.json();
       })
       .then((resData) => {
+        if (resData.errors) {
+          console.log(resData);
+          throw new Error("post creation failed.");
+        }
         console.log(resData);
         this.loadPosts();
-        // this.setState((prevState) => {
-        //   const updatedPosts = prevState.posts.filter((p) => p._id !== postId);
-        //   return { posts: updatedPosts, postsLoading: false };
-        // });
       })
       .catch((err) => {
         console.log(err);

@@ -33,7 +33,6 @@ const postSchema = yup.object().shape({
 
 module.exports = {
   createUser: async function ({ userInput }, req) {
-    console.log(userInput);
     //Data Validation
     const errorsList = [];
     try {
@@ -111,7 +110,6 @@ module.exports = {
     AuthenticationHandler(req);
     const user = req.raw.user;
     //Creating post
-    console.log(postInput);
     const post = new Post({
       title: postInput.title,
       content: postInput.content,
@@ -175,6 +173,18 @@ module.exports = {
         };
       }),
       totalPosts: totalPosts,
+    };
+  },
+  post: async function ({ id }, { req }) {
+    //authenticaoin
+    AuthenticationHandler(req);
+    //fetching post data
+    const post = await Post.findById(id).populate("creator");
+    return {
+      ...post._doc,
+      _id: post._id.toString(),
+      createdAt: post.createdAt.toISOString(),
+      updatedAt: post.updatedAt.toISOString(),
     };
   },
 };

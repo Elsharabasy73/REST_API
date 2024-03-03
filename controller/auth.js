@@ -60,3 +60,8 @@ exports.login = async (req, res, next) => {
     next(err);
   }
 };
+
+exports.test =async (req, res, next) => {
+  throw new Error("This is a test error");
+  
+};

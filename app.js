@@ -67,23 +67,26 @@ app.use((req, res, next) => {
 
 app.get("/playground", playground({ endpoint: "/graphql" }));
 
+const authRouter = require("./router/auth");
+app.use("/auth", authRouter);
+
 app.use(auth);
 
 //storing uploaded image
-app.put('/post-image', (req, res, next) => {
+app.put("/post-image", (req, res, next) => {
   if (!req.isAuth) {
-    throw new Error('Not authenticated!');
+    throw new Error("Not authenticated!");
   }
   if (!req.file) {
-    return res.status(200).json({ message: 'No file provided!' });
+    return res.status(200).json({ message: "No file provided!" });
   }
-  console.log("req.body.oldPath:",req.body.oldPath);
+  console.log("req.body.oldPath:", req.body.oldPath);
   if (req.body.oldPath) {
     removeImage(req.body.oldPath);
   }
   return res
     .status(201)
-    .json({ message: 'File stored.', filePath: req.file.path });
+    .json({ message: "File stored.", filePath: req.file.path });
 });
 
 app.use(
@@ -106,7 +109,7 @@ app.use(
   })
 );
 app.use("/test", (req, res, next) => {
-  res.status(200).json({ message: "test work!" });
+  throw new Error("This is a test error");
 });
 
 app.use((error, req, res, next) => {
@@ -120,9 +123,10 @@ mongoose
   .connect(MONGODB_URL)
   .then(async (res) => {
     console.log("db connected");
-    const server = await app.listen(8080);
+    const server = app.listen(8080);
     console.log("listinning on port 8080,server:8080");
   })
   .catch((err) => {
     console.log("listingerror" + err);
   });
+//understand helmet
